@@ -1,0 +1,120 @@
+ inspect(head(rules, n=10, by = "confidence"))
+     lhs                                           rhs                                     support confidence     lift count
+[1]  {export_administration_act_south_africa=n,                                                                             
+      Class=republican}                         => {adoption_of_the_budget_resolution=n} 0.1149425          1 2.543860    50
+[2]  {export_administration_act_south_africa=n,                                                                             
+      Class=republican}                         => {physician_fee_freeze=y}              0.1149425          1 2.457627    50
+[3]  {export_administration_act_south_africa=n,                                                                             
+      Class=republican}                         => {mx_missile=n}                        0.1149425          1 2.111650    50
+[4]  {education_spending=y,                                                                                                 
+      export_administration_act_south_africa=n} => {crime=y}                             0.1126437          1 1.754032    49
+[5]  {handicapped_infants=n,                                                                                                
+      export_administration_act_south_africa=n} => {crime=y}                             0.1149425          1 1.754032    50
+[6]  {el_salvador_aid=n,                                                                                                    
+      export_administration_act_south_africa=?} => {aid_to_nicaraguan_contras=y}         0.1402299          1 1.797521    61
+[7]  {physician_fee_freeze=n,                                                                                               
+      export_administration_act_south_africa=?} => {Class=democrat}                      0.1724138          1 1.629213    75
+[8]  {religious_groups_in_schools=n,                                                                                        
+      synfuels_corporation_cutback=y}           => {el_salvador_aid=n}                   0.1172414          1 2.091346    51
+[9]  {physician_fee_freeze=n,                                                                                               
+      synfuels_corporation_cutback=y}           => {Class=democrat}                      0.2597701          1 1.629213   113
+[10] {religious_groups_in_schools=n,                                                                                        
+      crime=n}                                  => {Class=democrat}                      0.2689655          1 1.629213   117
+      
+      
+> inspect(head(rules, n=10, by = "support"))
+     lhs                                      rhs                                     support confidence     lift count
+[1]  {physician_fee_freeze=n}              => {Class=democrat}                      0.5632184  0.9919028 1.616021   245
+[2]  {Class=democrat}                      => {physician_fee_freeze=n}              0.5632184  0.9176030 1.616021   245
+[3]  {adoption_of_the_budget_resolution=y} => {Class=democrat}                      0.5310345  0.9130435 1.487543   231
+[4]  {Class=democrat}                      => {adoption_of_the_budget_resolution=y} 0.5310345  0.8651685 1.487543   231
+[5]  {physician_fee_freeze=n}              => {adoption_of_the_budget_resolution=y} 0.5034483  0.8866397 1.524460   219
+[6]  {adoption_of_the_budget_resolution=y} => {physician_fee_freeze=n}              0.5034483  0.8656126 1.524460   219
+[7]  {adoption_of_the_budget_resolution=y,                                                                             
+      physician_fee_freeze=n}              => {Class=democrat}                      0.5034483  1.0000000 1.629213   219
+[8]  {physician_fee_freeze=n,                                                                                          
+      Class=democrat}                      => {adoption_of_the_budget_resolution=y} 0.5034483  0.8938776 1.536904   219
+[9]  {adoption_of_the_budget_resolution=y,                                                                             
+      Class=democrat}                      => {physician_fee_freeze=n}              0.5034483  0.9480519 1.669646   219
+[10] {aid_to_nicaraguan_contras=y}         => {Class=democrat}                      0.5011494  0.9008264 1.467639   218
+
+> inspect(head(rules, n=10, by = "lift"))
+     lhs                                      rhs                               support confidence     lift count
+[1]  {handicapped_infants=y,                                                                                     
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      anti_satellite_test_ban=y,                                                                                 
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      crime=n}                             => {religious_groups_in_schools=n} 0.1195402  0.9629630 2.755848    52
+[2]  {handicapped_infants=y,                                                                                     
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      anti_satellite_test_ban=y,                                                                                 
+      aid_to_nicaraguan_contras=y,                                                                               
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      crime=n}                             => {religious_groups_in_schools=n} 0.1195402  0.9629630 2.755848    52
+[3]  {handicapped_infants=y,                                                                                     
+      adoption_of_the_budget_resolution=y,                                                                       
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      anti_satellite_test_ban=y,                                                                                 
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      crime=n}                             => {religious_groups_in_schools=n} 0.1195402  0.9629630 2.755848    52
+[4]  {handicapped_infants=y,                                                                                     
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      anti_satellite_test_ban=y,                                                                                 
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      crime=n,                                                                                                   
+      Class=democrat}                      => {religious_groups_in_schools=n} 0.1195402  0.9629630 2.755848    52
+[5]  {handicapped_infants=y,                                                                                     
+      adoption_of_the_budget_resolution=y,                                                                       
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      anti_satellite_test_ban=y,                                                                                 
+      aid_to_nicaraguan_contras=y,                                                                               
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      crime=n}                             => {religious_groups_in_schools=n} 0.1195402  0.9629630 2.755848    52
+[6]  {handicapped_infants=y,                                                                                     
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      anti_satellite_test_ban=y,                                                                                 
+      aid_to_nicaraguan_contras=y,                                                                               
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      crime=n,                                                                                                   
+      Class=democrat}                      => {religious_groups_in_schools=n} 0.1195402  0.9629630 2.755848    52
+[7]  {handicapped_infants=y,                                                                                     
+      adoption_of_the_budget_resolution=y,                                                                       
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      anti_satellite_test_ban=y,                                                                                 
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      crime=n,                                                                                                   
+      Class=democrat}                      => {religious_groups_in_schools=n} 0.1195402  0.9629630 2.755848    52
+[8]  {handicapped_infants=y,                                                                                     
+      el_salvador_aid=n,                                                                                         
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      superfund_right_to_sue=n,                                                                                  
+      crime=n}                             => {religious_groups_in_schools=n} 0.1172414  0.9622642 2.753848    51
+[9]  {handicapped_infants=y,                                                                                     
+      el_salvador_aid=n,                                                                                         
+      aid_to_nicaraguan_contras=y,                                                                               
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      superfund_right_to_sue=n,                                                                                  
+      crime=n}                             => {religious_groups_in_schools=n} 0.1172414  0.9622642 2.753848    51
+[10] {handicapped_infants=y,                                                                                     
+      physician_fee_freeze=n,                                                                                    
+      el_salvador_aid=n,                                                                                         
+      mx_missile=y,                                                                                              
+      immigration=n,                                                                                             
+      superfund_right_to_sue=n,                                                                                  
+      crime=n}                             => {religious_groups_in_schools=n} 0.1172414  0.9622642 2.753848    51

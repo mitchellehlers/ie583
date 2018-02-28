@@ -1,0 +1,63 @@
+CONFIDENCE 
+         lhs                                           rhs                support confidence     lift count
+[1]  {physician_fee_freeze=n,                                                                          
+      export_administration_act_south_africa=?} => {Class=democrat} 0.1724138          1 1.629213    75
+[2]  {physician_fee_freeze=n,                                                                          
+      synfuels_corporation_cutback=y}           => {Class=democrat} 0.2597701          1 1.629213   113
+[3]  {religious_groups_in_schools=n,                                                                   
+      crime=n}                                  => {Class=democrat} 0.2689655          1 1.629213   117
+[4]  {crime=n,                                                                                         
+      duty_free_exports=y}                      => {Class=democrat} 0.2804598          1 1.629213   122
+[5]  {water_project_cost_sharing=n,                                                                    
+      crime=n}                                  => {Class=democrat} 0.1701149          1 1.629213    74
+[6]  {superfund_right_to_sue=n,                                                                        
+      crime=n}                                  => {Class=democrat} 0.3126437          1 1.629213   136
+[7]  {anti_satellite_test_ban=y,                                                                       
+      crime=n}                                  => {Class=democrat} 0.3402299          1 1.629213   148
+[8]  {physician_fee_freeze=n,                                                                          
+      crime=n}                                  => {Class=democrat} 0.3747126          1 1.629213   163
+[9]  {adoption_of_the_budget_resolution=y,                                                             
+      crime=n}                                  => {Class=democrat} 0.3632184          1 1.629213   158
+[10] {water_project_cost_sharing=y,                                                                    
+      physician_fee_freeze=n}                   => {Class=democrat} 0.2367816          1 1.629213   103
+
+SUPPORT 
+     lhs                                      rhs                support confidence     lift count
+[1]  {physician_fee_freeze=n}              => {Class=democrat} 0.5632184  0.9919028 1.616021   245
+[2]  {adoption_of_the_budget_resolution=y} => {Class=democrat} 0.5310345  0.9130435 1.487543   231
+[3]  {adoption_of_the_budget_resolution=y,                                                        
+      physician_fee_freeze=n}              => {Class=democrat} 0.5034483  1.0000000 1.629213   219
+[4]  {aid_to_nicaraguan_contras=y}         => {Class=democrat} 0.5011494  0.9008264 1.467639   218
+[5]  {education_spending=n}                => {Class=democrat} 0.4896552  0.9141631 1.489367   213
+[6]  {physician_fee_freeze=n,                                                                     
+      aid_to_nicaraguan_contras=y}         => {Class=democrat} 0.4827586  0.9952607 1.621492   210
+[7]  {adoption_of_the_budget_resolution=y,                                                        
+      aid_to_nicaraguan_contras=y}         => {Class=democrat} 0.4666667  0.9441860 1.538281   203
+[8]  {physician_fee_freeze=n,                                                                     
+      education_spending=n}                => {Class=democrat} 0.4620690  0.9950495 1.621148   201
+[9]  {el_salvador_aid=n}                   => {Class=democrat} 0.4597701  0.9615385 1.566551   200
+[10] {anti_satellite_test_ban=y}           => {Class=democrat} 0.4597701  0.8368201 1.363359   200
+
+
+LIFT 
+     lhs                                           rhs                support confidence     lift count
+[1]  {physician_fee_freeze=n,                                                                          
+      export_administration_act_south_africa=?} => {Class=democrat} 0.1724138          1 1.629213    75
+[2]  {physician_fee_freeze=n,                                                                          
+      synfuels_corporation_cutback=y}           => {Class=democrat} 0.2597701          1 1.629213   113
+[3]  {religious_groups_in_schools=n,                                                                   
+      crime=n}                                  => {Class=democrat} 0.2689655          1 1.629213   117
+[4]  {crime=n,                                                                                         
+      duty_free_exports=y}                      => {Class=democrat} 0.2804598          1 1.629213   122
+[5]  {water_project_cost_sharing=n,                                                                    
+      crime=n}                                  => {Class=democrat} 0.1701149          1 1.629213    74
+[6]  {superfund_right_to_sue=n,                                                                        
+      crime=n}                                  => {Class=democrat} 0.3126437          1 1.629213   136
+[7]  {anti_satellite_test_ban=y,                                                                       
+      crime=n}                                  => {Class=democrat} 0.3402299          1 1.629213   148
+[8]  {physician_fee_freeze=n,                                                                          
+      crime=n}                                  => {Class=democrat} 0.3747126          1 1.629213   163
+[9]  {adoption_of_the_budget_resolution=y,                                                             
+      crime=n}                                  => {Class=democrat} 0.3632184          1 1.629213   158
+[10] {water_project_cost_sharing=y,                                                                    
+      physician_fee_freeze=n}                   => {Class=democrat} 0.2367816          1 1.629213   103

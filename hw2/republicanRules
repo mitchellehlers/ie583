@@ -1,0 +1,101 @@
+> inspect(head(Rep_rules, n=10, by = "confidence"))
+     lhs                                           rhs                  support confidence     lift count
+[1]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      immigration=y}                            => {Class=republican} 0.1678161          1 2.589286    73
+[2]  {water_project_cost_sharing=n,                                                                      
+      physician_fee_freeze=y,                                                                            
+      immigration=y}                            => {Class=republican} 0.1034483          1 2.589286    45
+[3]  {water_project_cost_sharing=n,                                                                      
+      physician_fee_freeze=y,                                                                            
+      export_administration_act_south_africa=y} => {Class=republican} 0.1011494          1 2.589286    44
+[4]  {physician_fee_freeze=y,                                                                            
+      immigration=y,                                                                                     
+      synfuels_corporation_cutback=n}           => {Class=republican} 0.1747126          1 2.589286    76
+[5]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      immigration=y,                                                                                     
+      education_spending=y}                     => {Class=republican} 0.1471264          1 2.589286    64
+[6]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y}                     => {Class=republican} 0.2367816          1 2.589286   103
+[7]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      education_spending=y,                                                                              
+      export_administration_act_south_africa=y} => {Class=republican} 0.1471264          1 2.589286    64
+[8]  {water_project_cost_sharing=n,                                                                      
+      physician_fee_freeze=y,                                                                            
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y}                     => {Class=republican} 0.1195402          1 2.589286    52
+[9]  {physician_fee_freeze=y,                                                                            
+      immigration=y,                                                                                     
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y}                     => {Class=republican} 0.1425287          1 2.589286    62
+[10] {physician_fee_freeze=y,                                                                            
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y,                                                                              
+      export_administration_act_south_africa=y} => {Class=republican} 0.1471264          1 2.589286    64
+
+> inspect(head(Rep_rules, n=10, by = "support"))
+     lhs                                      rhs                  support confidence     lift count
+[1]  {physician_fee_freeze=y}              => {Class=republican} 0.3747126  0.9209040 2.384483   163
+[2]  {physician_fee_freeze=y,                                                                       
+      el_salvador_aid=y}                   => {Class=republican} 0.3586207  0.9285714 2.404337   156
+[3]  {physician_fee_freeze=y,                                                                       
+      crime=y}                             => {Class=republican} 0.3563218  0.9226190 2.388924   155
+[4]  {physician_fee_freeze=y,                                                                       
+      el_salvador_aid=y,                                                                            
+      crime=y}                             => {Class=republican} 0.3402299  0.9250000 2.395089   148
+[5]  {physician_fee_freeze=y,                                                                       
+      religious_groups_in_schools=y}       => {Class=republican} 0.3379310  0.9187500 2.378906   147
+[6]  {physician_fee_freeze=y,                                                                       
+      mx_missile=n}                        => {Class=republican} 0.3333333  0.9415584 2.437964   145
+[7]  {physician_fee_freeze=y,                                                                       
+      el_salvador_aid=y,                                                                            
+      mx_missile=n}                        => {Class=republican} 0.3310345  0.9411765 2.436975   144
+[8]  {physician_fee_freeze=y,                                                                       
+      el_salvador_aid=y,                                                                            
+      religious_groups_in_schools=y}       => {Class=republican} 0.3310345  0.9230769 2.390110   144
+[9]  {adoption_of_the_budget_resolution=n} => {Class=republican} 0.3264368  0.8304094 2.150167   142
+[10] {adoption_of_the_budget_resolution=n,                                                          
+      physician_fee_freeze=y}              => {Class=republican} 0.3218391  0.9589041 2.482877   140
+
+> inspect(head(Rep_rules, n=10, by = "lift"))
+     lhs                                           rhs                  support confidence     lift count
+[1]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      immigration=y}                            => {Class=republican} 0.1678161          1 2.589286    73
+[2]  {water_project_cost_sharing=n,                                                                      
+      physician_fee_freeze=y,                                                                            
+      immigration=y}                            => {Class=republican} 0.1034483          1 2.589286    45
+[3]  {water_project_cost_sharing=n,                                                                      
+      physician_fee_freeze=y,                                                                            
+      export_administration_act_south_africa=y} => {Class=republican} 0.1011494          1 2.589286    44
+[4]  {physician_fee_freeze=y,                                                                            
+      immigration=y,                                                                                     
+      synfuels_corporation_cutback=n}           => {Class=republican} 0.1747126          1 2.589286    76
+[5]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      immigration=y,                                                                                     
+      education_spending=y}                     => {Class=republican} 0.1471264          1 2.589286    64
+[6]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y}                     => {Class=republican} 0.2367816          1 2.589286   103
+[7]  {adoption_of_the_budget_resolution=n,                                                               
+      physician_fee_freeze=y,                                                                            
+      education_spending=y,                                                                              
+      export_administration_act_south_africa=y} => {Class=republican} 0.1471264          1 2.589286    64
+[8]  {water_project_cost_sharing=n,                                                                      
+      physician_fee_freeze=y,                                                                            
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y}                     => {Class=republican} 0.1195402          1 2.589286    52
+[9]  {physician_fee_freeze=y,                                                                            
+      immigration=y,                                                                                     
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y}                     => {Class=republican} 0.1425287          1 2.589286    62
+[10] {physician_fee_freeze=y,                                                                            
+      synfuels_corporation_cutback=n,                                                                    
+      education_spending=y,                                                                              
+      export_administration_act_south_africa=y} => {Class=republican} 0.1471264          1 2.589286    64
