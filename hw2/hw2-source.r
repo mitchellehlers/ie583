@@ -26,6 +26,13 @@ inspect(head(rules, n=10, by = "confidence"))
 inspect(head(rules, n=10, by = "support"))
 inspect(head(rules, n=10, by = "lift"))
 
+plot(head(rules, n=10, by = "lift"), method="graph", itemLabels=FALSE)
+
+general_rules = subset(rules, subset = lift > 2.0) 
+inspect(head(general_rules, n=10, by = "confidence"))
+inspect(head(general_rules, n=10, by = "support"))
+inspect(head(general_rules, n=10, by = "lift"))
+
 #Best Rules Class=democrat
 Dem_rules = subset(rules, subset = rhs %in% "Class=democrat") 
 plot(Dem_rules)
@@ -48,14 +55,14 @@ plot(head(Rep_rules, n=10, by = "lift"))
 
 #Independent Test Set
 set.seed(1234)
-trainIndex <- createDataPartition(voteData$Class,p=.67,list=FALSE,times=1)
+trainIndex <- createDataPartition(voteData$adoption_of_the_budget_resolution,p=.67,list=FALSE,times=1)
 voteTrain <- voteData[trainIndex,]
 voteTest<-voteData[-trainIndex,]
 
 #Decision Tree
-DTmodel<-J48(Class ~ .,data=voteTrain)
+DTmodel<-J48(adoption_of_the_budget_resolution ~ .,data=voteTrain)
 prediction<-predict(DTmodel,voteTest)
-confusionMatrix(prediction,voteTest$Class)
+confusionMatrix(prediction,voteTest$adoption_of_the_budget_resolution)
 plot(DTmodel)
 
 ctrl<-trainControl(method="cv", number = 10, savePred=T,classProb=T)
