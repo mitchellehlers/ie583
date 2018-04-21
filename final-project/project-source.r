@@ -5,9 +5,10 @@ library(ggplot2)
 library(caret)
 library(lubridate)
 library(DMwR)
+library(Boruta)
 
 #### Upload data to Console###
-train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F)
+train_sbset <- read.csv("~/bench/datasets/iowastate/ie583/train_sample.csv", stringsAsFactors = F)
 
 ################################
 ####### Exploration ############
@@ -91,7 +92,7 @@ names(inst_sel_df) <- substring(names(inst_sel_df), 4)
 str(inst_sel_df)
 
 ######################################
-#### Instance Selection/Sampling #####
+#### Instance Sampling #####
 ######################################
 
 # OVERSAMPLING - oversamples minority class instances with replacement to equal out class imbalance
@@ -100,7 +101,7 @@ oversample <- upSample(x = inst_sel_df[,-ncol(inst_sel_df)],
                        y = inst_sel_df$Class)  
 table(oversample$Class)
 
-# Oversampling durning resampling - http://topepo.github.io/caret/subsampling-for-class-imbalances.html
+#source - http://topepo.github.io/caret/subsampling-for-class-imbalances.html
 mtry <- sqrt(ncol(inst_sel_df))
 rf_tunegrid = expand.grid(.mtry=mtry)
 
@@ -121,39 +122,24 @@ print(oversample_inside)
 
 # UNDERSAMPLING - Leave the mintory class untouched and select instances of majority class via random sampling
 set.seed(1234)
-undersample <- downSample(x = inst_sel_df[, -ncol(inst_sel_df)],
-                          y = inst_sel_df$Class)
+undersample <- downSample(x = smote_train[, -ncol(smote_train)],
+                          y = smote_train$Class)
 table(undersample$Class)
 
-# Understample durning resampling - http://topepo.github.io/caret/subsampling-for-class-imbalances.html
 ctrl = trainControl(method="cv",
                     number=10,
                     savePred=T,
-                    classProb=T,
-                    sampling="down")
+                    classProb=T)
+                    #sampling="down")
 
 undersample_inside = train(Class~.,
-                           data=inst_sel_df,
+                           data=undersample,
                            method="rf",
                            trControl=ctrl,
                            tuneGrid=rf_tunegrid,
                            metric="Accuracy")
 
 print(undersample_inside)
-
-#Cross validation  ######################33 WHY J48 CROSS VALIDATION
-ctrl<-trainControl(method="cv", number=10, savePred=T,classProb=T)  #####3 WHY THESE VALUES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-treeGrid <- expand.grid(C=(1:3)*0.1, M=5)  ### WHY THESE VALUES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-upsample_model <- train(Class ~ . , data=oversample, method="J48",trControl=ctrl,tuneGrid=treeGrid)
-confusionMatrix(upsample_model)
-plot(upsample_model)
-
-downsample_model <- train(Class ~ . , data=undersample, method="J48",trControl=ctrl,tuneGrid=treeGrid)
-confusionMatrix(downsample_model)
-plot(downsample_model)
-
-str(inst_sel_df)
 
 ### SMOTE
 
@@ -167,13 +153,11 @@ set.seed(1234)
 smote_train <- SMOTE(Class~., data = smot_sel_df)                         
 table(smote_train$Class)
 
-
-#J48 Tree cross validation
-smote_model <- train(class ~ . , data=smote_train, method="J48",trControl=ctrl,tuneGrid=treeGrid)
-confusionMatrix(smote_model)
-plot(smote_model)
-
 #########################################
 #### Variable Importance Measurment #####
 #########################################
 
+set.seed(123)
+boruta.train <- Boruta(Class ~ ., data = smote_train, doTrace = 2)
+print(boruta.train)
+plot(boruta.train, cex.axis=.7, las=2, xlab="", main="Variable Importance") 
