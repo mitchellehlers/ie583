@@ -5,10 +5,12 @@ library(ggplot2)
 library(caret)
 library(lubridate)
 library(DMwR)
+library(randomForest)
 library(Boruta)
 
 #### Upload data to Console###
-train_sbset <- read.csv("~/bench/datasets/iowastate/ie583/train_sample.csv", stringsAsFactors = F)
+train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F)
+test <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/test.csv", stringsAsFactors = F)
 
 ################################
 ####### Exploration ############
@@ -58,51 +60,53 @@ train_sbset <- train_sbset %>%
 
 head(train_sbset)
 
-### Unable to run with these dervied fields R crashed on local system.
-## Franz's dervied fields.  Needs additional testing
-#train_sbset <- train_sbset %>% 
-#  mutate(hour = hour(click_time),
-#         ip_device_os_channel_app = paste(ip,'-',device,'-',os,'-',channel,'-',app),
-#         ip_device_os = paste(ip,'-',device,'-',os),
-#         ip_device = paste(ip,'-',device),
-#         ip_channel_app = paste(ip,'-',channel,'-',app),
-#         ip_channel = paste(ip,'-',channel),
-#         ip_app = paste(ip,'-',app),
-#         channel_app = paste(channel,'-',app),
-#         channel_app_os_device = paste(channel,'-',app,'-',os,'-',device),
-#         channel_os_device = paste(channel,'-',os,'-',device)#,
-#         #x = if(hour > 12) return ('PM')
-#  )
-#head(train_sbset)
-
 ################################
 ###### Instance selection Data Preprocessing
 ################################
-### Create subset of data based off feature engineering
-#spliting the data into 8th and taking the first 8th
+
+# Create train subset of data based off feature engineering
+# spliting the data into 8th and taking the first 8th
 num_split <- nrow(train_sbset) / 8
 num_rows <- nrow(train_sbset)
 
 train_sbset_split_list <- split(train_sbset, rep(1:ceiling(num_rows/num_split), each=num_split, length.out=num_rows))
 
-### instance selection data frame
-inst_sel_df <- as.data.frame(train_sbset_split_list[1])
-names(inst_sel_df) <- substring(names(inst_sel_df), 4)
+### train selection data frames
+train_sbset_1 <- as.data.frame(train_sbset_split_list[1])
+names(train_sbset_1) <- substring(names(train_sbset_1), 4)
+str(train_sbset_1)
 
-str(inst_sel_df)
+train_sbset_2 <- as.data.frame(train_sbset_split_list[2])
+names(train_sbset_2) <- substring(names(train_sbset_2), 4)
+str(train_sbset_2)
+
+# Create test subsets, split into 16th
+test_num_split <- nrow(test) / 16
+test_num_rows <- nrow(test)
+
+test_sbset_split_list <- split(train_sbset, rep(1:ceiling(test_num_rows/test_num_split), each=test_num_split, length.out=test_num_rows))
+
+test_sbset_1 <- as.data.frame(test_sbset_split_list[1])
+names(test_sbset_1) <- substring(names(test_sbset_1), 4)
+str(test_sbset_1)
+
 
 ######################################
 #### Instance Sampling #####
 ######################################
 
-# OVERSAMPLING - oversamples minority class instances with replacement to equal out class imbalance
-set.seed(1234)
-oversample <- upSample(x = inst_sel_df[,-ncol(inst_sel_df)],
-                       y = inst_sel_df$Class)  
-table(oversample$Class)
+# how imbalenced is the data? VERY
+table(train_sbset$Class)
+prop.table(table(train_sbset$Class))
 
-#source - http://topepo.github.io/caret/subsampling-for-class-imbalances.html
-mtry <- sqrt(ncol(inst_sel_df))
+# OVERSAMPLING - oversamples minority class instances with replacement to equal out class imbalance
+# see - http://topepo.github.io/caret/subsampling-for-class-imbalances.html
+set.seed(1234)
+oversampled <- upSample(x = train_sbset_1[,-ncol(train_sbset_1)],
+                       y = train_sbset_1$Class)  
+table(oversampled$Class)
+
+mtry <- sqrt(ncol(train_sbset_1))
 rf_tunegrid = expand.grid(.mtry=mtry)
 
 ctrl = trainControl(method="cv",
@@ -112,7 +116,7 @@ ctrl = trainControl(method="cv",
                     sampling="up")
 
 oversample_inside = train(Class~.,
-                          data=inst_sel_df,
+                          data=train_sbset_1,
                           method="rf",
                           trControl=ctrl,
                           tuneGrid=rf_tunegrid,
@@ -122,29 +126,15 @@ print(oversample_inside)
 
 # UNDERSAMPLING - Leave the mintory class untouched and select instances of majority class via random sampling
 set.seed(1234)
-undersample <- downSample(x = smote_train[, -ncol(smote_train)],
-                          y = smote_train$Class)
-table(undersample$Class)
 
-ctrl = trainControl(method="cv",
-                    number=10,
-                    savePred=T,
-                    classProb=T)
-                    #sampling="down")
+undersampled <- downSample(x = train_sbset_1[, -ncol(train_sbset_1)],
+                                y = train_sbset_1$Class)
+table(undersampled$Class)
 
-undersample_inside = train(Class~.,
-                           data=undersample,
-                           method="rf",
-                           trControl=ctrl,
-                           tuneGrid=rf_tunegrid,
-                           metric="Accuracy")
-
-print(undersample_inside)
-
-### SMOTE
+### SMOTE with Undersampling
 
 #Smote data preprocessing, taking same data frame used for sampling but SMOTE requires char and POSIXct attributes to be factor
-smot_sel_df <- inst_sel_df
+smot_sel_df <- train_sbset_1
 smot_sel_df$attributed_time <- sub("^$", "Na", smot_sel_df$attributed_time) #doing this so we can factor this
 smot_sel_df$attributed_time <- as.factor(smot_sel_df$attributed_time)
 smot_sel_df$click_time <- as.factor(smot_sel_df$click_time)
@@ -153,11 +143,88 @@ set.seed(1234)
 smote_train <- SMOTE(Class~., data = smot_sel_df)                         
 table(smote_train$Class)
 
+undersample_smote <- downSample(x = smote_train[, -ncol(smote_train)],
+                          y = smote_train$Class)
+table(undersample_smote$Class)
+prop.table(table(undersample_smote$Class))
+
 #########################################
 #### Variable Importance Measurment #####
 #########################################
 
 set.seed(123)
-boruta.train <- Boruta(Class ~ ., data = smote_train, doTrace = 2)
+boruta.train <- Boruta(Class ~ ., data = undersample_smote, doTrace = 2)
 print(boruta.train)
 plot(boruta.train, cex.axis=.7, las=2, xlab="", main="Variable Importance") 
+
+# Split off only the top 5 important attributes
+#TODO
+
+#########################################
+#### Predictive Modeling  #####
+#########################################
+
+# Attempt 1) Random Forest with SMOTE and Undersampling
+cols <- ncol(train_sbset_1)
+mtry <- c(1:cols)#sqrt(ncol(train_sbset_1))
+
+x <- train_sbset_1[,1:(cols-1)]
+y <- train_sbset_1[,cols]
+optimalMtry <- tuneRF(x, y, stepFactor=1.5, improve=1e-10)
+
+print(optimalMtry)
+
+rf_tunegrid = expand.grid(.mtry=mtry)
+
+ctrl = trainControl(method="cv",
+                    number=5,
+                    savePred=T,
+                    classProb=T)
+
+rf_model = train(Class~.,
+                           data=undersample_smote,
+                           method="rf",
+                           trControl=ctrl,
+                           tuneGrid=rf_tunegrid,
+                           metric="Accuracy")
+
+confusionMatrix(rf_model)
+
+rf_model_1 <- randomForest(Class ~ attributed_time + app + ip,
+             data=undersample_smote, 
+             importance=TRUE, 
+             ntree=2000)
+
+prediction <- predict(rf_model_1, test_sbset_1)
+
+# Attempt 2) kNN with SMOTE and Undersampling
+ctrl<-trainControl(method="cv",
+                   number = 5,
+                   savePred=T,
+                   classProb=T)
+
+knnGrid <-expand.grid(k=(1:10))
+
+kNN_model <- train(Class ~ . ,
+                   data=oversampled,
+                   method="knn",
+                   trControl=ctrl,
+                   tuneGrid = knnGrid)
+
+confusionMatrix(kNN_model)
+
+# Attempt 3) Decision Tree with Undersampling
+ctrl<-trainControl(method="cv",
+                   number = 5,
+                   savePred=T,
+                   classProb=T)
+
+treeGrid <- expand.grid(C=(1:3)*0.1, M=5)
+
+J48_model <- train(Class ~ . ,
+                  data=undersampled,
+                  method="J48",
+                  trControl=ctrl,
+                  tuneGrid=treeGrid)
+
+confusionMatrix(J48_model)
