@@ -131,6 +131,17 @@ undersampled <- downSample(x = train_sbset_1[, -ncol(train_sbset_1)],
                                 y = train_sbset_1$Class)
 table(undersampled$Class)
 
+# SMOTE
+smot_sel_df <- train_sbset_1
+smot_sel_df$attributed_time <- sub("^$", "Na", smot_sel_df$attributed_time) #doing this so we can factor this
+smot_sel_df$attributed_time <- as.factor(smot_sel_df$attributed_time)
+smot_sel_df$click_time <- as.factor(smot_sel_df$click_time)
+
+set.seed(1234)
+smote_train <- SMOTE(Class~., data = smot_sel_df)                         
+table(smote_train$Class)
+prop.table(table(smote_train$Class))
+
 ### SMOTE with Undersampling
 
 #Smote data preprocessing, taking same data frame used for sampling but SMOTE requires char and POSIXct attributes to be factor
@@ -153,7 +164,7 @@ prop.table(table(undersample_smote$Class))
 #########################################
 
 set.seed(123)
-boruta.train <- Boruta(Class ~ ., data = undersample_smote, doTrace = 2)
+boruta.train <- Boruta(Class ~ ., data = train_sbset_2, doTrace = 2)
 print(boruta.train)
 plot(boruta.train, cex.axis=.7, las=2, xlab="", main="Variable Importance") 
 
