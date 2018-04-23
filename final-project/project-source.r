@@ -7,6 +7,8 @@ library(lubridate)
 library(DMwR)
 library(randomForest)
 library(Boruta)
+library(e1071)
+library(RWeka)
 
 #### Upload data to Console###
 train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F)
@@ -45,197 +47,126 @@ head(train_sbset)
 ####  Construct Derived Attirbutes
 ###################################
 
-### Manipulate Date-Time columns to create dervied attributes
-##Add Date and Time individual columns for 'click_time'
-
-#Change 'click_time' column from 'CHR' format to POSIXct, in order to use 
 train_sbset$click_time <- as.POSIXct(as.character(train_sbset$click_time))
-
-#create day,hr,minute and time_since fields.  
 train_sbset <- train_sbset %>% 
-  mutate(day = day(click_time),
-         hour = hour(click_time),
+  mutate(hour = hour(click_time),
          minute = minute(click_time),
-         Sec_since_start = as.integer(click_time - as.POSIXct("2017-11-07 00:00:00")))
-
+         am_pm = ifelse(hour(click_time) >= 12, "AM", "PM"),
+         ip_device_os_channel_app = paste(ip,'-',device,'-',os,'-',channel,'-',app),
+         ip_device_os = paste(ip,'-',device,'-',os),
+         ip_device = paste(ip,'-',device),
+         ip_channel_app = paste(ip,'-',channel,'-',app),
+         ip_channel = paste(ip,'-',channel),
+         ip_app = paste(ip,'-',app),
+         channel_app = paste(channel,'-',app),
+         channel_app_os_device = paste(channel,'-',app,'-',os,'-',device),
+         channel_os_device = paste(channel,'-',os,'-',device)
+  )    
 head(train_sbset)
 
-################################
-###### Instance selection Data Preprocessing
-################################
-
-# Create train subset of data based off feature engineering
-# spliting the data into 8th and taking the first 8th
-num_split <- nrow(train_sbset) / 8
-num_rows <- nrow(train_sbset)
-
-train_sbset_split_list <- split(train_sbset, rep(1:ceiling(num_rows/num_split), each=num_split, length.out=num_rows))
-
-### train selection data frames
-train_sbset_1 <- as.data.frame(train_sbset_split_list[1])
-names(train_sbset_1) <- substring(names(train_sbset_1), 4)
-str(train_sbset_1)
-
-train_sbset_2 <- as.data.frame(train_sbset_split_list[2])
-names(train_sbset_2) <- substring(names(train_sbset_2), 4)
-str(train_sbset_2)
-
-# Create test subsets, split into 16th
-test_num_split <- nrow(test) / 16
-test_num_rows <- nrow(test)
-
-test_sbset_split_list <- split(train_sbset, rep(1:ceiling(test_num_rows/test_num_split), each=test_num_split, length.out=test_num_rows))
-
-test_sbset_1 <- as.data.frame(test_sbset_split_list[1])
-names(test_sbset_1) <- substring(names(test_sbset_1), 4)
-str(test_sbset_1)
-
-
-######################################
-#### Instance Sampling #####
-######################################
-
-# how imbalenced is the data? VERY
-table(train_sbset$Class)
-prop.table(table(train_sbset$Class))
-
-# OVERSAMPLING - oversamples minority class instances with replacement to equal out class imbalance
-# see - http://topepo.github.io/caret/subsampling-for-class-imbalances.html
-set.seed(1234)
-oversampled <- upSample(x = train_sbset_1[,-ncol(train_sbset_1)],
-                       y = train_sbset_1$Class)  
-table(oversampled$Class)
-
-mtry <- sqrt(ncol(train_sbset_1))
-rf_tunegrid = expand.grid(.mtry=mtry)
-
-ctrl = trainControl(method="cv",
-                    number=10,
-                    savePred=T,
-                    classProb=T,
-                    sampling="up")
-
-oversample_inside = train(Class~.,
-                          data=train_sbset_1,
-                          method="rf",
-                          trControl=ctrl,
-                          tuneGrid=rf_tunegrid,
-                          metric="Accuracy")
-
-print(oversample_inside)
-
-# UNDERSAMPLING - Leave the mintory class untouched and select instances of majority class via random sampling
-set.seed(1234)
-
-undersampled <- downSample(x = train_sbset_1[, -ncol(train_sbset_1)],
-                                y = train_sbset_1$Class)
-table(undersampled$Class)
-
-# SMOTE
-smot_sel_df <- train_sbset_1
-smot_sel_df$attributed_time <- sub("^$", "Na", smot_sel_df$attributed_time) #doing this so we can factor this
-smot_sel_df$attributed_time <- as.factor(smot_sel_df$attributed_time)
-smot_sel_df$click_time <- as.factor(smot_sel_df$click_time)
-
-set.seed(1234)
-smote_train <- SMOTE(Class~., data = smot_sel_df)                         
-table(smote_train$Class)
-prop.table(table(smote_train$Class))
-
-### SMOTE with Undersampling
-
-#Smote data preprocessing, taking same data frame used for sampling but SMOTE requires char and POSIXct attributes to be factor
-smot_sel_df <- train_sbset_1
-smot_sel_df$attributed_time <- sub("^$", "Na", smot_sel_df$attributed_time) #doing this so we can factor this
-smot_sel_df$attributed_time <- as.factor(smot_sel_df$attributed_time)
-smot_sel_df$click_time <- as.factor(smot_sel_df$click_time)
-
-set.seed(1234)
-smote_train <- SMOTE(Class~., data = smot_sel_df)                         
-table(smote_train$Class)
-
-undersample_smote <- downSample(x = smote_train[, -ncol(smote_train)],
-                          y = smote_train$Class)
-table(undersample_smote$Class)
-prop.table(table(undersample_smote$Class))
+#factors
+train_sbset$Class <- factor(train_sbset$Class)
+train_sbset$am_pm <- factor(train_sbset$am_pm)
+train_sbset$ip_device_os <- factor(train_sbset$ip_device_os)
+train_sbset$ip_device <- factor(train_sbset$ip_device)
+train_sbset$ip_channel_app <- factor(train_sbset$ip_channel_app)
+train_sbset$ip_channel <- factor(train_sbset$ip_channel)
+train_sbset$ip_app <- factor(train_sbset$ip_app)
+train_sbset$channel_app <- factor(train_sbset$channel_app)
+train_sbset$channel_app_os_device <- factor(train_sbset$channel_app_os_device)
+train_sbset$channel_os_device <- factor(train_sbset$channel_os_device)
+head(train_sbset)
 
 #########################################
 #### Variable Importance Measurment #####
 #########################################
 
 set.seed(123)
-boruta.train <- Boruta(Class ~ ., data = train_sbset_2, doTrace = 2)
+boruta.train <- Boruta(Class ~ ., data = train_sbset, doTrace = 2)
 print(boruta.train)
 plot(boruta.train, cex.axis=.7, las=2, xlab="", main="Variable Importance") 
 
-# Split off only the top 5 important attributes
-#TODO
+#removing attributed time as this is the time the app was downloaded
+projTrainFS<-train_sbset[, c(1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20)]
+head(projTrainFS)
+
+# Split off only the important attributes
+projTrainFS<-train_sbset[, c(1,2,3,4,5,8)]
+head(projTrainFS)
+
+######################################
+#### Instance Sampling #####
+######################################
+
+# how imbalenced is the data?
+table(projTrainFS$Class)
+prop.table(table(projTrainFS$Class))
+
+# Will try SMOTE, Undersampling, and Oversampling below in Predicitive Modeling
 
 #########################################
 #### Predictive Modeling  #####
 #########################################
 
-# Attempt 1) Random Forest with SMOTE and Undersampling
-cols <- ncol(train_sbset_1)
-mtry <- c(1:cols)#sqrt(ncol(train_sbset_1))
+# Attempt 1) Random Forest with SMOTE
+cvCount = 5
+ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
+cols = ncol(projTrainFS)
+tunegrid <- expand.grid(.mtry=c(1:cols))
+folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
+train.accuracy.estimate.rf = NULL
+fold.accuracy.estimate.rf = NULL
+for(f in 1:cvCount){
+  testData = projTrainFS[folds[[f]],]
+  trainingData = projTrainFS[-folds[[f]],]
+  trainingData2 = SMOTE(Class~., data=trainingData)   
+  RF_model <- train(Class~., data=trainingData2, method="rf", tuneGrid=tunegrid, trControl=ctrl_cv)
+  best<-as.numeric(RF_model$bestTune)
+  show(RF_model)
+  train.accuracy.estimate.rf[f] = as.numeric(RF_model$results[best,3])
+  fold.accuracy.estimate.rf[f] = (table(predict(RF_model,testData),testData$Class)[1,1]+table(predict(RF_model,testData),testData$Class)[2,2])/length(testData$Class)
+}
+mean(train.accuracy.estimate.rf)
+mean(fold.accuracy.estimate.rf)
 
-x <- train_sbset_1[,1:(cols-1)]
-y <- train_sbset_1[,cols]
-optimalMtry <- tuneRF(x, y, stepFactor=1.5, improve=1e-10)
+# Attempt 2) Decision Tree with Undersampling
+cvCount = 5
+ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="down")
+cols = ncol(projTrainFS)
+folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
+train.accuracy.estimate.j48 = NULL
+fold.accuracy.estimate.j48 = NULL
+for(f in 1:cvCount){
+  testData = projTrainFS[folds[[f]],]
+  trainingData = projTrainFS[-folds[[f]],]
+  trainingData2 = downSample(x = trainingData[,-ncol(trainingData)],
+                           y = trainingData$Class)  
+  RF_model <- train(Class~., data=trainingData2, method="J48", trControl=ctrl_cv)
+  best<-as.numeric(RF_model$bestTune)
+  show(RF_model)
+  train.accuracy.estimate.j48[f] = as.numeric(RF_model$results[best,3])
+  fold.accuracy.estimate.j48[f] = (table(predict(RF_model,testData),testData$Class)[1,1]+table(predict(RF_model,testData),testData$Class)[2,2])/length(testData$Class)
+}
+mean(train.accuracy.estimate.j48)
+mean(fold.accuracy.estimate.j48)
 
-print(optimalMtry)
-
-rf_tunegrid = expand.grid(.mtry=mtry)
-
-ctrl = trainControl(method="cv",
-                    number=5,
-                    savePred=T,
-                    classProb=T)
-
-rf_model = train(Class~.,
-                           data=undersample_smote,
-                           method="rf",
-                           trControl=ctrl,
-                           tuneGrid=rf_tunegrid,
-                           metric="Accuracy")
-
-confusionMatrix(rf_model)
-
-rf_model_1 <- randomForest(Class ~ attributed_time + app + ip,
-             data=undersample_smote, 
-             importance=TRUE, 
-             ntree=2000)
-
-prediction <- predict(rf_model_1, test_sbset_1)
-
-# Attempt 2) kNN with SMOTE and Undersampling
-ctrl<-trainControl(method="cv",
-                   number = 5,
-                   savePred=T,
-                   classProb=T)
-
-knnGrid <-expand.grid(k=(1:10))
-
-kNN_model <- train(Class ~ . ,
-                   data=oversampled,
-                   method="knn",
-                   trControl=ctrl,
-                   tuneGrid = knnGrid)
-
-confusionMatrix(kNN_model)
-
-# Attempt 3) Decision Tree with Undersampling
-ctrl<-trainControl(method="cv",
-                   number = 5,
-                   savePred=T,
-                   classProb=T)
-
-treeGrid <- expand.grid(C=(1:3)*0.1, M=5)
-
-J48_model <- train(Class ~ . ,
-                  data=undersampled,
-                  method="J48",
-                  trControl=ctrl,
-                  tuneGrid=treeGrid)
-
-confusionMatrix(J48_model)
+# Attempt 3) naiveBayes with Oversampling
+cvCount = 5
+ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="up")
+cols = ncol(projTrainFS)
+folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
+train.accuracy.estimate.nb = NULL
+fold.accuracy.estimate.nb = NULL
+for(f in 1:cvCount){
+  testData = projTrainFS[folds[[f]],]
+  trainingData = projTrainFS[-folds[[f]],]
+  trainingData2 = upSample(x = trainingData[,-ncol(trainingData)],
+                           y = trainingData$Class)  
+  RF_model <- train(Class~., data=trainingData2, method="nb", trControl=ctrl_cv)
+  best<-as.numeric(RF_model$bestTune)
+  show(RF_model)
+  train.accuracy.estimate.nb[f] = as.numeric(RF_model$results[best,3])
+  fold.accuracy.estimate.nb[f] = (table(predict(RF_model,testData),testData$Class)[1,1]+table(predict(RF_model,testData),testData$Class)[2,2])/length(testData$Class)
+}
+mean(train.accuracy.estimate.nb)
+mean(fold.accuracy.estimate.nb)
