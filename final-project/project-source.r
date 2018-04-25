@@ -139,11 +139,11 @@ for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
   trainingData2 = SMOTE(Class~., data=trainingData)  
-  RF_model <- train(Class~., data=trainingData2, method="J48", trControl=ctrl_cv)
-  best<-as.numeric(RF_model$bestTune)
-  show(RF_model)
-  train.accuracy.estimate.j48[f] = as.numeric(RF_model$results[best,3])
-  fold.accuracy.estimate.j48[f] = (table(predict(RF_model,testData),testData$Class)[1,1]+table(predict(RF_model,testData),testData$Class)[2,2])/length(testData$Class)
+  J48_model <- train(Class~., data=trainingData2, method="J48", trControl=ctrl_cv)
+  best<-as.numeric(J48_model$bestTune)
+  show(J48_model)
+  train.accuracy.estimate.j48[f] = as.numeric(J48_model$results[best,3])
+  fold.accuracy.estimate.j48[f] = (table(predict(J48_model,testData),testData$Class)[1,1]+table(predict(J48_model,testData),testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.j48)
 mean(fold.accuracy.estimate.j48)
@@ -159,11 +159,23 @@ for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
   trainingData2 = SMOTE(Class~., data=trainingData)  
-  RF_model <- train(Class~., data=trainingData2, method="nb", trControl=ctrl_cv)
-  best<-as.numeric(RF_model$bestTune)
-  show(RF_model)
-  train.accuracy.estimate.nb[f] = as.numeric(RF_model$results[best,3])
-  fold.accuracy.estimate.nb[f] = (table(predict(RF_model,testData),testData$Class)[1,1]+table(predict(RF_model,testData),testData$Class)[2,2])/length(testData$Class)
+  NB_model <- train(Class~., data=trainingData2, method="nb", trControl=ctrl_cv)
+  best<-as.numeric(NB_model$bestTune)
+  show(NB_model)
+  train.accuracy.estimate.nb[f] = as.numeric(NB_model$results[best,3])
+  fold.accuracy.estimate.nb[f] = (table(predict(NB_model,testData),testData$Class)[1,1]+table(predict(NB_model,testData),testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.nb)
 mean(fold.accuracy.estimate.nb)
+
+##########################
+##### Compare Models #####
+##########################
+results <- resamples(list(RF=RF_model, J48=J48_model, NB=NB_model))
+scales <- list(x=list(relation="free"), y=list(relation="free"))
+
+## box and whiskers plot
+bwplot(results, scales=scales)
+
+## density plot
+densityplot(results, scales=scales)
