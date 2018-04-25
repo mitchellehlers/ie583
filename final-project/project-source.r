@@ -12,7 +12,6 @@ library(RWeka)
 
 #### Upload data to Console###
 train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F)
-test <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/test.csv", stringsAsFactors = F)
 
 ################################
 ####### Exploration ############
@@ -131,7 +130,7 @@ mean(fold.accuracy.estimate.rf)
 
 # Attempt 2) Decision Tree with Undersampling
 cvCount = 5
-ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="down")
+ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
 cols = ncol(projTrainFS)
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.j48 = NULL
@@ -139,8 +138,7 @@ fold.accuracy.estimate.j48 = NULL
 for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
-  trainingData2 = downSample(x = trainingData[,-ncol(trainingData)],
-                           y = trainingData$Class)  
+  trainingData2 = SMOTE(Class~., data=trainingData)  
   RF_model <- train(Class~., data=trainingData2, method="J48", trControl=ctrl_cv)
   best<-as.numeric(RF_model$bestTune)
   show(RF_model)
@@ -152,7 +150,7 @@ mean(fold.accuracy.estimate.j48)
 
 # Attempt 3) naiveBayes with Oversampling
 cvCount = 5
-ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="up")
+ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
 cols = ncol(projTrainFS)
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.nb = NULL
@@ -160,8 +158,7 @@ fold.accuracy.estimate.nb = NULL
 for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
-  trainingData2 = upSample(x = trainingData[,-ncol(trainingData)],
-                           y = trainingData$Class)  
+  trainingData2 = SMOTE(Class~., data=trainingData)  
   RF_model <- train(Class~., data=trainingData2, method="nb", trControl=ctrl_cv)
   best<-as.numeric(RF_model$bestTune)
   show(RF_model)
