@@ -10,7 +10,8 @@ library(Boruta)
 library(e1071)
 library(RWeka)
 
-#### Upload data to Console###
+#### Read Data In ####
+# train_sample.csv per Kaggle.com contains 100K random instances from the full training data.
 train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F)
 
 ################################
@@ -90,7 +91,7 @@ projTrainFS<-train_sbset[, c(1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20)]
 head(projTrainFS)
 
 # Split off only the important attributes
-projTrainFS<-train_sbset[, c(1,2,3,4,5,8,9)]
+projTrainFS<-train_sbset[, c(1,2,3,4,5,9,8)]
 head(projTrainFS)
 
 ######################################
@@ -107,7 +108,7 @@ prop.table(table(projTrainFS$Class))
 #### Predictive Modeling  #####
 #########################################
 
-# Attempt 1) Random Forest with SMOTE
+# Attempt 1a) Random Forest with SMOTE
 cvCount = 5
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
 cols = ncol(projTrainFS)
@@ -115,6 +116,7 @@ tunegrid <- expand.grid(.mtry=c(1:cols))
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.rf = NULL
 fold.accuracy.estimate.rf = NULL
+prediction.rf <- data.frame()
 for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
@@ -122,19 +124,70 @@ for(f in 1:cvCount){
   RF_model <- train(Class~., data=trainingData2, method="rf", tuneGrid=tunegrid, trControl=ctrl_cv)
   best<-as.numeric(RF_model$bestTune)
   show(RF_model)
+  tempPredict <- predict(RF_model,testData)
+  prediction.rf <- rbind(prediction.rf, as.data.frame(tempPredict))
+  RF_models_list[f] = RF_model
   train.accuracy.estimate.rf[f] = as.numeric(RF_model$results[best,3])
-  fold.accuracy.estimate.rf[f] = (table(predict(RF_model,testData),testData$Class)[1,1]+table(predict(RF_model,testData),testData$Class)[2,2])/length(testData$Class)
+  fold.accuracy.estimate.rf[f] = (table(tempPredict,testData$Class)[1,1]+table(tempPredict,testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.rf)
 mean(fold.accuracy.estimate.rf)
 
-# Attempt 2) Decision Tree with Undersampling
+result.rf <- cbind(prediction.rf, projTrainFS[, 7])
+names(result.rf) <- c("Predicted", "Actual")
+
+# Attempt 1b) Random Forest with Undersampling
+cvCount = 5
+ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="down")
+cols = ncol(projTrainFS)
+tunegrid <- expand.grid(.mtry=c(1:cols))
+folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
+train.accuracy.estimate.rf.down = NULL
+fold.accuracy.estimate.rf.down = NULL
+for(f in 1:cvCount){
+  testData = projTrainFS[folds[[f]],]
+  trainingData = projTrainFS[-folds[[f]],]
+  trainingData2 = downSample(x = trainingData[,-ncol(trainingData)],
+                             y = trainingData$Class)    
+  RF_model_down <- train(Class~., data=trainingData2, method="rf", tuneGrid=tunegrid, trControl=ctrl_cv)
+  best<-as.numeric(RF_model_down$bestTune)
+  show(RF_model_down)
+  train.accuracy.estimate.rf.down[f] = as.numeric(RF_model_down$results[best,3])
+  fold.accuracy.estimate.rf.down[f] = (table(predict(RF_model_down,testData),testData$Class)[1,1]+table(predict(RF_model_down,testData),testData$Class)[2,2])/length(testData$Class)
+}
+mean(train.accuracy.estimate.rf.down)
+mean(fold.accuracy.estimate.rf.down)
+
+# Attempt 1c) Random Forest with Oversampling - NOTE: Took 3hours to run on 16gb RAM machine
+cvCount = 5
+ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="up")
+cols = ncol(projTrainFS)
+tunegrid <- expand.grid(.mtry=c(1:cols))
+folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
+train.accuracy.estimate.rf.up = NULL
+fold.accuracy.estimate.rf.up = NULL
+for(f in 1:cvCount){
+  testData = projTrainFS[folds[[f]],]
+  trainingData = projTrainFS[-folds[[f]],]
+  trainingData2 = upSample(x = trainingData[,-ncol(trainingData)],
+                           y = trainingData$Class)    
+  RF_model_up <- train(Class~., data=trainingData2, method="rf", tuneGrid=tunegrid, trControl=ctrl_cv)
+  best<-as.numeric(RF_model_up$bestTune)
+  show(RF_model_up)
+  train.accuracy.estimate.rf.up[f] = as.numeric(RF_model_up$results[best,3])
+  fold.accuracy.estimate.rf.up[f] = (table(predict(RF_model_up,testData),testData$Class)[1,1]+table(predict(RF_model_up,testData),testData$Class)[2,2])/length(testData$Class)
+}
+mean(train.accuracy.estimate.rf.up)
+mean(fold.accuracy.estimate.rf.up)
+
+# Attempt 2) Decision Tree with SMOTE
 cvCount = 5
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
 cols = ncol(projTrainFS)
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.j48 = NULL
 fold.accuracy.estimate.j48 = NULL
+prediction.j48 <- data.frame()
 for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
@@ -142,19 +195,25 @@ for(f in 1:cvCount){
   J48_model <- train(Class~., data=trainingData2, method="J48", trControl=ctrl_cv)
   best<-as.numeric(J48_model$bestTune)
   show(J48_model)
+  tempPredict <- predict(J48_model,testData)
+  prediction.j48 <- rbind(prediction.j48, as.data.frame(tempPredict))
   train.accuracy.estimate.j48[f] = as.numeric(J48_model$results[best,3])
-  fold.accuracy.estimate.j48[f] = (table(predict(J48_model,testData),testData$Class)[1,1]+table(predict(J48_model,testData),testData$Class)[2,2])/length(testData$Class)
+  fold.accuracy.estimate.j48[f] = (table(tempPredict,testData$Class)[1,1]+table(tempPredict,testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.j48)
 mean(fold.accuracy.estimate.j48)
 
-# Attempt 3) naiveBayes with Oversampling
+result.j48 <- cbind(prediction.j48, projTrainFS[, 7])
+names(result.j48) <- c("Predicted", "Actual")
+
+# Attempt 3) naiveBayes with SMOTE
 cvCount = 5
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
 cols = ncol(projTrainFS)
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.nb = NULL
 fold.accuracy.estimate.nb = NULL
+prediction.nb <- data.frame()
 for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
@@ -162,20 +221,30 @@ for(f in 1:cvCount){
   NB_model <- train(Class~., data=trainingData2, method="nb", trControl=ctrl_cv)
   best<-as.numeric(NB_model$bestTune)
   show(NB_model)
+  tempPredict <- predict(NB_model,testData)
+  prediction.nb <- rbind(prediction.nb, as.data.frame(tempPredict))
   train.accuracy.estimate.nb[f] = as.numeric(NB_model$results[best,3])
-  fold.accuracy.estimate.nb[f] = (table(predict(NB_model,testData),testData$Class)[1,1]+table(predict(NB_model,testData),testData$Class)[2,2])/length(testData$Class)
+  fold.accuracy.estimate.nb[f] = (table(tempPredict,testData$Class)[1,1]+table(tempPredict,testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.nb)
 mean(fold.accuracy.estimate.nb)
 
-##########################
-##### Compare Models #####
-##########################
-results <- resamples(list(RF=RF_model, J48=J48_model, NB=NB_model))
-scales <- list(x=list(relation="free"), y=list(relation="free"))
+result.nb <- cbind(prediction.nb, projTrainFS[, 7])
+names(result.nb) <- c("Predicted", "Actual")
 
-## box and whiskers plot
-bwplot(results, scales=scales)
 
-## density plot
-densityplot(results, scales=scales)
+####################################################
+##### Compare Models with ConfustionMatrix #########
+####################################################
+
+# Attempt 1a) Random Forest with SMOTE
+confusionMatrix(data = result.rf$Predicted,
+                reference = result.rf$Actual)
+
+# Attempt 2) Decision Tree with SMOTE
+confusionMatrix(data = result.j48$Predicted,
+                reference = result.j48$Actual)
+
+# Attempt 3) naiveBayes with SMOTE
+confusionMatrix(data = result.nb$Predicted,
+                reference = result.nb$Actual)
