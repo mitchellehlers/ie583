@@ -128,14 +128,13 @@ for(f in 1:cvCount){
   show(RF_model)
   tempPredict <- predict(RF_model,testData)
   prediction.rf <- rbind(prediction.rf, as.data.frame(tempPredict))
-  RF_models_list[f] = RF_model
   train.accuracy.estimate.rf[f] = as.numeric(RF_model$results[best,3])
   fold.accuracy.estimate.rf[f] = (table(tempPredict,testData$Class)[1,1]+table(tempPredict,testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.rf)
 mean(fold.accuracy.estimate.rf)
 
-result.rf <- cbind(prediction.rf, projTrainFS[, 7])
+result.rf <- cbind(prediction.rf, projTrainFS[, 6])
 names(result.rf) <- c("Predicted", "Actual")
 
 # Attempt 1b) Random Forest with Undersampling
@@ -146,6 +145,7 @@ tunegrid <- expand.grid(.mtry=c(1:cols))
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.rf.down = NULL
 fold.accuracy.estimate.rf.down = NULL
+prediction.rf.down <- data.frame()
 for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
@@ -154,11 +154,16 @@ for(f in 1:cvCount){
   RF_model_down <- train(Class~., data=trainingData2, method="rf", tuneGrid=tunegrid, trControl=ctrl_cv)
   best<-as.numeric(RF_model_down$bestTune)
   show(RF_model_down)
+  tempPredict <- predict(RF_model,testData)
+  prediction.rf.down <- rbind(prediction.rf.down, as.data.frame(tempPredict))
   train.accuracy.estimate.rf.down[f] = as.numeric(RF_model_down$results[best,3])
-  fold.accuracy.estimate.rf.down[f] = (table(predict(RF_model_down,testData),testData$Class)[1,1]+table(predict(RF_model_down,testData),testData$Class)[2,2])/length(testData$Class)
+  fold.accuracy.estimate.rf.down[f] = (table(tempPredict,testData$Class)[1,1]+table(tempPredict,testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.rf.down)
 mean(fold.accuracy.estimate.rf.down)
+
+result.rf.down <- cbind(prediction.rf.down, projTrainFS[, 6])
+names(result.rf.down) <- c("Predicted", "Actual")
 
 # Attempt 1c) Random Forest with Oversampling - NOTE: Took 3hours to run on 16gb RAM machine
 cvCount = 3
@@ -168,6 +173,7 @@ tunegrid <- expand.grid(.mtry=c(1:cols))
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.rf.up = NULL
 fold.accuracy.estimate.rf.up = NULL
+prediction.rf.up <- data.frame()
 for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
@@ -176,11 +182,16 @@ for(f in 1:cvCount){
   RF_model_up <- train(Class~., data=trainingData2, method="rf", tuneGrid=tunegrid, trControl=ctrl_cv)
   best<-as.numeric(RF_model_up$bestTune)
   show(RF_model_up)
+  tempPredict <- predict(RF_model,testData)
+  prediction.rf.up <- rbind(prediction.rf.down, as.data.frame(tempPredict))
   train.accuracy.estimate.rf.up[f] = as.numeric(RF_model_up$results[best,3])
-  fold.accuracy.estimate.rf.up[f] = (table(predict(RF_model_up,testData),testData$Class)[1,1]+table(predict(RF_model_up,testData),testData$Class)[2,2])/length(testData$Class)
+  fold.accuracy.estimate.rf.up[f] = (table(tempPredict,testData$Class)[1,1]+table(tempPredict,testData$Class)[2,2])/length(testData$Class)
 }
 mean(train.accuracy.estimate.rf.up)
 mean(fold.accuracy.estimate.rf.up)
+
+result.rf.up <- cbind(prediction.rf.up, projTrainFS[, 6])
+names(result.rf.up) <- c("Predicted", "Actual")
 
 # Attempt 2) Decision Tree with SMOTE
 cvCount = 3
@@ -205,7 +216,7 @@ for(f in 1:cvCount){
 mean(train.accuracy.estimate.j48)
 mean(fold.accuracy.estimate.j48)
 
-result.j48 <- cbind(prediction.j48, projTrainFS[, 7])
+result.j48 <- cbind(prediction.j48, projTrainFS[, 6])
 names(result.j48) <- c("Predicted", "Actual")
 
 # Attempt 3) naiveBayes with SMOTE
@@ -231,7 +242,7 @@ for(f in 1:cvCount){
 mean(train.accuracy.estimate.nb)
 mean(fold.accuracy.estimate.nb)
 
-result.nb <- cbind(prediction.nb, projTrainFS[, 7])
+result.nb <- cbind(prediction.nb, projTrainFS[, 6])
 names(result.nb) <- c("Predicted", "Actual")
 
 
@@ -242,6 +253,14 @@ names(result.nb) <- c("Predicted", "Actual")
 # Attempt 1a) Random Forest with SMOTE
 confusionMatrix(data = result.rf$Predicted,
                 reference = result.rf$Actual)
+
+# Attempt 1b) Random Forest with Undersampling
+confusionMatrix(data = result.rf.down$Predicted,
+                reference = result.rf.down$Actual)
+
+# Attempt 1c) Random Forest with Oversampling - NOTE: Took 3hours to run on 16gb RAM machine
+confusionMatrix(data = result.rf.up$Predicted,
+                reference = result.rf.up$Actual)
 
 # Attempt 2) Decision Tree with SMOTE
 confusionMatrix(data = result.j48$Predicted,
