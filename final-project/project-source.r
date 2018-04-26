@@ -12,7 +12,7 @@ library(RWeka)
 
 #### Read Data In ####
 # train_sample.csv per Kaggle.com contains 100K random instances from the full training data.
-train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F, nrows=10000)
+train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F)
 
 ################################
 ####### Exploration ############
@@ -93,7 +93,7 @@ projTrainFS<-train_sbset[, c(1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20)]
 head(projTrainFS)
 
 # Split off only the important attributes
-projTrainFS<-train_sbset[, c(1,2,18,19,20,8)]
+projTrainFS<-train_sbset[, c(1,2,3,4,5,8)]
 head(projTrainFS)
 
 ######################################
@@ -165,7 +165,7 @@ mean(fold.accuracy.estimate.rf.down)
 result.rf.down <- cbind(prediction.rf.down, projTrainFS[, 6])
 names(result.rf.down) <- c("Predicted", "Actual")
 
-# Attempt 1c) Random Forest with Oversampling - NOTE: Took 3hours to run on 16gb RAM machine
+# Attempt 1c) Random Forest with Oversampling
 cvCount = 3
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="up")
 cols = ncol(projTrainFS)
@@ -183,7 +183,7 @@ for(f in 1:cvCount){
   best<-as.numeric(RF_model_up$bestTune)
   show(RF_model_up)
   tempPredict <- predict(RF_model,testData)
-  prediction.rf.up <- rbind(prediction.rf.down, as.data.frame(tempPredict))
+  prediction.rf.up <- rbind(prediction.rf.up, as.data.frame(tempPredict))
   train.accuracy.estimate.rf.up[f] = as.numeric(RF_model_up$results[best,3])
   fold.accuracy.estimate.rf.up[f] = (table(tempPredict,testData$Class)[1,1]+table(tempPredict,testData$Class)[2,2])/length(testData$Class)
 }
@@ -258,7 +258,7 @@ confusionMatrix(data = result.rf$Predicted,
 confusionMatrix(data = result.rf.down$Predicted,
                 reference = result.rf.down$Actual)
 
-# Attempt 1c) Random Forest with Oversampling - NOTE: Took 3hours to run on 16gb RAM machine
+# Attempt 1c) Random Forest with Oversampling
 confusionMatrix(data = result.rf.up$Predicted,
                 reference = result.rf.up$Actual)
 
