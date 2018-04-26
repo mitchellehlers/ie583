@@ -12,7 +12,7 @@ library(RWeka)
 
 #### Read Data In ####
 # train_sample.csv per Kaggle.com contains 100K random instances from the full training data.
-train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F)
+train_sbset <- read.csv("C:/bench/iowastate/datasets/ie583/final-project/train_sample.csv", stringsAsFactors = F, nrows=10000)
 
 ################################
 ####### Exploration ############
@@ -67,6 +67,7 @@ head(train_sbset)
 #factors
 train_sbset$Class <- factor(train_sbset$Class)
 train_sbset$am_pm <- factor(train_sbset$am_pm)
+train_sbset$ip_device_os_channel_app <- factor(train_sbset$ip_device_os_channel_app)
 train_sbset$ip_device_os <- factor(train_sbset$ip_device_os)
 train_sbset$ip_device <- factor(train_sbset$ip_device)
 train_sbset$ip_channel_app <- factor(train_sbset$ip_channel_app)
@@ -84,6 +85,7 @@ head(train_sbset)
 set.seed(123)
 boruta.train <- Boruta(Class ~ ., data = train_sbset, doTrace = 2)
 print(boruta.train)
+attStats(boruta.train)
 plot(boruta.train, cex.axis=.7, las=2, xlab="", main="Variable Importance") 
 
 #removing attributed time as this is the time the app was downloaded
@@ -91,7 +93,7 @@ projTrainFS<-train_sbset[, c(1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20)]
 head(projTrainFS)
 
 # Split off only the important attributes
-projTrainFS<-train_sbset[, c(1,2,3,4,5,9,8)]
+projTrainFS<-train_sbset[, c(1,2,18,19,20,8)]
 head(projTrainFS)
 
 ######################################
@@ -109,7 +111,7 @@ prop.table(table(projTrainFS$Class))
 #########################################
 
 # Attempt 1a) Random Forest with SMOTE
-cvCount = 5
+cvCount = 3
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
 cols = ncol(projTrainFS)
 tunegrid <- expand.grid(.mtry=c(1:cols))
@@ -137,7 +139,7 @@ result.rf <- cbind(prediction.rf, projTrainFS[, 7])
 names(result.rf) <- c("Predicted", "Actual")
 
 # Attempt 1b) Random Forest with Undersampling
-cvCount = 5
+cvCount = 3
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="down")
 cols = ncol(projTrainFS)
 tunegrid <- expand.grid(.mtry=c(1:cols))
@@ -159,7 +161,7 @@ mean(train.accuracy.estimate.rf.down)
 mean(fold.accuracy.estimate.rf.down)
 
 # Attempt 1c) Random Forest with Oversampling - NOTE: Took 3hours to run on 16gb RAM machine
-cvCount = 5
+cvCount = 3
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="up")
 cols = ncol(projTrainFS)
 tunegrid <- expand.grid(.mtry=c(1:cols))
@@ -181,9 +183,9 @@ mean(train.accuracy.estimate.rf.up)
 mean(fold.accuracy.estimate.rf.up)
 
 # Attempt 2) Decision Tree with SMOTE
-cvCount = 5
+cvCount = 3
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
-cols = ncol(projTrainFS)
+treeGrid_dectree = expand.grid(C=(1:3)*0.1, M=(1:3))
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
 train.accuracy.estimate.j48 = NULL
 fold.accuracy.estimate.j48 = NULL
@@ -192,7 +194,7 @@ for(f in 1:cvCount){
   testData = projTrainFS[folds[[f]],]
   trainingData = projTrainFS[-folds[[f]],]
   trainingData2 = SMOTE(Class~., data=trainingData)  
-  J48_model <- train(Class~., data=trainingData2, method="J48", trControl=ctrl_cv)
+  J48_model <- train(Class~., data=trainingData2, method="J48", trControl=ctrl_cv, tuneGrid=treeGrid_dectree)
   best<-as.numeric(J48_model$bestTune)
   show(J48_model)
   tempPredict <- predict(J48_model,testData)
@@ -207,7 +209,7 @@ result.j48 <- cbind(prediction.j48, projTrainFS[, 7])
 names(result.j48) <- c("Predicted", "Actual")
 
 # Attempt 3) naiveBayes with SMOTE
-cvCount = 5
+cvCount = 3
 ctrl_cv = trainControl(method = "cv", number = cvCount, savePred = T, classProb = T, sampling="smote")
 cols = ncol(projTrainFS)
 folds = split(sample(nrow(projTrainFS), nrow(projTrainFS),replace=FALSE), as.factor(1:cvCount))
